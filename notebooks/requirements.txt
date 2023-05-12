@@ -1,0 +1,4 @@
+jupyterlab==3.4.7
+seaborn==0.12.1
+
+-e ../eptnr_package

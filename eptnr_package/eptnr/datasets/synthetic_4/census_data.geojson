@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "neighborhood": "RC1", "n_inh": 200, "n_purple": 100, "n_red": 100 }, "geometry": { "type": "Point", "coordinates": [ 0.0, 0.0 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC2", "n_inh": 200, "n_purple": 100, "n_red": 100 }, "geometry": { "type": "Point", "coordinates": [ 2.0, 0.0 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC3", "n_inh": 200, "n_purple": 100, "n_red": 100 }, "geometry": { "type": "Point", "coordinates": [ 1.0, 1.0 ] } }
+]
+}

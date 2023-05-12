@@ -1,0 +1,11 @@
+{
+"type": "FeatureCollection",
+"features": [
+{ "type": "Feature", "properties": { "neighborhood": "RC0", "n_inh": 1000, "n_purple": 100, "n_red": 900 }, "geometry": { "type": "Point", "coordinates": [ 3.5, 3.5 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC1", "n_inh": 1000, "n_purple": 200, "n_red": 800 }, "geometry": { "type": "Point", "coordinates": [ 2.5, 3.5 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC2", "n_inh": 1000, "n_purple": 200, "n_red": 800 }, "geometry": { "type": "Point", "coordinates": [ 3.5, 2.5 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC3", "n_inh": 1200, "n_purple": 1000, "n_red": 200 }, "geometry": { "type": "Point", "coordinates": [ 0.5, 1.5 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC4", "n_inh": 800, "n_purple": 600, "n_red": 200 }, "geometry": { "type": "Point", "coordinates": [ 0.5, 0.5 ] } },
+{ "type": "Feature", "properties": { "neighborhood": "RC5", "n_inh": 1000, "n_purple": 1000, "n_red": 0 }, "geometry": { "type": "Point", "coordinates": [ 1.5, 0.5 ] } }
+]
+}

@@ -1,0 +1,2 @@
+# Examples
+These examples assume that you have followed the `README` in the root `eptnr_package` and  installed the `eptnr` package. The examples here show you how to load the synthetic sample graphs, how to set-up a specific reward function, and finally how to run a DeepMaxQ-Learning agent on the problem. Furthermore, we also walk you through on how to create your own synthetic dataset and how you can create your own problem graph of a city of interest.
