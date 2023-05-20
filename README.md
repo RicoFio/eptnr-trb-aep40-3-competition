@@ -20,6 +20,9 @@ $ cd .
 $ streamlit run main.py
 ```
 
+> **Note**
+> Should the above not work, I have included a zip file of the `atlanta_data` folder at submission time. Please consider unzipping and starting the streamlit app directly.
+
 # Step 1: Create your dataset
 Follow the jupyter notebook in `./atlanta_data/atlanta_data_prep.ipynb` to find out how to create an EPTNR dataset. For your convenience, the Atlanta dataset can be found in the same folder. You can load the EPTNR graph in `./atlanta_data/resulting_graph/Atlanta_problem_graph_2023-05-17.gml` and its companion parquet file `./atlanta_data/atlanta_census.parquet`. The former contains information on the Points of Interest (POIs), in our case primary and secondary schools, on the location of the neighborhoods in Atlanta, and on the Metropolitan Atlanta Rapid Transit Authority's (MARTA) transit network. The latter contains information on the census data for Atlanta (GA, USA). Specifically, it contains the number of total inhabitants per neighborhood as well as the number of white and non-white inhabitants.
 
