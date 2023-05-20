@@ -2,15 +2,22 @@
 This repository provides a reusable library for the _Equitable Public Transport Network Reduction (EPTNR)_ problem. With it, we hope to stimulate the research community working at the intersection of Public Transport, Artificial Intelligence, and Social Equality, and facilitate their access to the EPTNR problem.
 
 # Installation
-Simply run:
+If you would simply want to run the experiments:
+
+> **Warning**
+> The dockerfile doesn't work because of conda issues, please follow instructions below
 
 ```shell
 $ git clone https://github.com/RicoFio/eptnr-tbr-competition
-$ cd eptnr-trb-competition
+$ cd eptnr-tbr-competition
 $ conda env create -f ./conda_env.yaml
 $ ...
 $ conda activate trb-eptnr
-$ 
+$ cd atlanta_data/
+$ python atlanta_data_prep.py  # This is a python file of the ipynb
+$ ... # wait for data generation
+$ cd .
+$ streamlit run main.py
 ```
 
 # Step 1: Create your dataset

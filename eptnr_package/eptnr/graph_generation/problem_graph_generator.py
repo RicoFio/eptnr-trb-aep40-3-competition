@@ -156,7 +156,6 @@ class ProblemGraphGenerator:
                 raise ValueError("If clip_graph_to_neighborhoods is True, you have to provide a geographical_neighborhoods_gdf")
             
             logger.debug("Clipping graph to neighborhoods")
-            logger.warning("This operation does not work properly yet! Check your graph!")
             # Filter all vertices which actually lie in the neighborhoods
             station_locations = [(pts_id, Point(x,y)) for pts_id, x,y in zip(range(len(g.vs)), g.vs['x'], g.vs['y'])]
             station_gdf = gpd.GeoDataFrame(station_locations, columns=['id', 'geometry'], geometry='geometry', crs=self.geographical_neighborhoods_gdf.crs)
