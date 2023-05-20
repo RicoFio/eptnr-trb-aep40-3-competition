@@ -19,3 +19,4 @@ xlrd==2.0.1
 folium==0.13.0
 mapclassify==2.4.3
 haversine==2.7.0
+seaborn==0.11.2

@@ -1,35 +1,36 @@
 # Equitable Public Transport Network Reduction
 This repository provides a reusable library for the _Equitable Public Transport Network Reduction (EPTNR)_ problem. With it, we hope to stimulate the research community working at the intersection of Public Transport, Artificial Intelligence, and Social Equality, and facilitate their access to the EPTNR problem.
 
-# Motivation
-
 # Installation
-If you would simply want to run the experiments presented in the Notebooks:
+Simply run:
 
 ```shell
-$ git clone https://github.com/RicoFio/equitable-transport-reduction
-$ cd equitable-transport-reduction
-$ conda env create -f ./en
+$ git clone https://github.com/RicoFio/eptnr-tbr-competition
+$ cd eptnr-trb-competition
+$ conda env create -f ./conda_env.yaml
+$ ...
+$ conda activate trb-eptnr
+$ 
 ```
 
-# Citations
-**TBC**
-Only use Python 3.9 otherwise you'll cry.
+# Step 1: Create your dataset
+Follow the jupyter notebook in `./atlanta_data/atlanta_data_prep.ipynb` to find out how to create an EPTNR dataset. For your convenience, the Atlanta dataset can be found in the same folder. You can load the EPTNR graph in `./atlanta_data/resulting_graph/Atlanta_problem_graph_2023-05-17.gml` and its companion parquet file `./atlanta_data/atlanta_census.parquet`. The former contains information on the Points of Interest (POIs), in our case primary and secondary schools, on the location of the neighborhoods in Atlanta, and on the Metropolitan Atlanta Rapid Transit Authority's (MARTA) transit network. The latter contains information on the census data for Atlanta (GA, USA). Specifically, it contains the number of total inhabitants per neighborhood as well as the number of white and non-white inhabitants.
 
-# Contribution and Extension
-Most of this repository was designed to be easily fork-able, reproducible, and extensible. If you are a researcher aiming to extend the EPTNR problem definition or try different algorithms or heuristic searches on it, the best point to start is the `eptnr_package`.
-
-Our suggestion is to use [`conda`](https://www.anaconda.com/) for environment management. To this end, we included a `conda-env.yaml` which will simplify the setup of a new `eptnr` environment. We have been strict with our dependency versioning to further enhance compatibility.
-
-Your next step should be to install the `eptnr_package` in pip's _development_ to read-in changes easily using:
-
+# Step 2: Run our info frontend
 ```shell
-$ cd eptnr_package
-$ pip install -e .
+$ streamlit run main.py
+```
+A streamlit application will open in your browser. Here, you can select your own or the Atlanta dataset and load the EPTNR problem graph as well as the corresponding census file. The main statistics as well as some nice illustrations on your problem will be shown. Once you run Step 3 below, feel free to come back here, select the results file, and see how the edges change the network and the distribution of the access equality.
+
+# Step 3: Run the exhaustive optimization search
+Central to our EPTNR formulation is the objective of equality optimization. The idea here is that, if you really need to reduce your network, the best thing will probably be to do so equally for the observed demographic groups. In our case, we are considering white and non-white inhabitants of Atlanta. Currently, we only provide a full-blown, exhaustive search. This means that with the combinatorial complexity of the EPTNR problem, this quickly becomes intractable.
+
+To run the search on small datasets (and a small edge budget), run:
+```shell
+$ python optimal_run.py GRAPH_GML_FILE_PATH CENSUS_PARQUET_FILE_PATH --edge_types METRO --budget 2
 ```
 
-From here, you can add to a multitude of aspects of the EPTNR problem. For one, you can alter the code in `graph_generation` (`./eptnr_package/eptnr/graph_generation`), if you want to add or modify the EPTNR definition. You can also work on other rewards than the ones presented in our research here (`egalitarian`, `utilitarian`, `elitarian`) by adding to `rewards` (`/eptnr_package/eptnr/rewards`).
+This would result in a reduction of 5% of the MARTA's metro network. Feel free to play around with it. The results are stored under `./results/optimal_run.json`. A little hack here is that you can also change the selected edges manually, allowing you to assess access equality changes with the edges you select.
 
-You can find the synthetic datasets in `datasets` (`/eptnr_package/eptnr/datasets`) and the (Deep)MaxQ(N)-Learning algorithms are in 
-
-# To
+# Step 4 and beyond: Use your own algorithm!
+As our entire EPTNR formulation is evolving around the possibility of optimization, it would be best to try your own algorithms as well! For an idea how to best go about it, have a look at the jupyter notebook here: `./experiments/atlanta_experiments.ipynb`. We are currently working on reinforcement learning and genetic algorithm approaches to solve this heuristic search more efficiently than our current naive search. If you happen to be interested, please reach out using GitHub issues.

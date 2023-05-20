@@ -23,7 +23,6 @@ from .utils.file_management_utils import (
     remove_files_in_dir,
 )
 from ..constants.gtfs_network_types import GTFSNetworkTypes
-from ..constants.gtfs_network_costs_per_distance_unit import GTFSNetworkCostsPerDistanceUnit
 import igraph as ig
 import logging
 
@@ -37,7 +36,7 @@ class GTFSGraphGenerator:
     def __init__(self, city: str, gtfs_zip_file_path: Path, out_dir_path: Path,
                  day: str, time_from: str, time_to: str,
                  agencies: List[str] = None, contract_vertices: bool = False,
-                 modalities: List[str] = None, costs: Enum = GTFSNetworkCostsPerDistanceUnit) -> None:
+                 modalities: List[str] = None) -> None:
         self.city = city
         bbox = get_bbox(city)
         # (lng_max, lat_min, lng_min, lat_max)
@@ -50,7 +49,6 @@ class GTFSGraphGenerator:
         self.time_to = time_to
         self.contract_vertices = contract_vertices
         self.modalities = modalities
-        self.costs = costs
 
     def _filter_gtfs(self):
         out_path = self.gtfs_file_path.parent \
@@ -126,8 +124,8 @@ class GTFSGraphGenerator:
 
                     stdf = loaded_feeds.stop_times
                     dist = stdf[stdf.trip_id == tid]
-                    d_origin = dist[dist['stop_id'] == osid]['shape_dist_traveled'].item()
-                    d_destination = dist[dist['stop_id'] == dsid]['shape_dist_traveled'].item()
+                    d_origin = dist[dist['stop_id'] == osid]['shape_dist_traveled'].max()
+                    d_destination = dist[dist['stop_id'] == dsid]['shape_dist_traveled'].max()
                     distance = np.round(abs(d_destination - d_origin), decimals=2)
 
                     if math.isinf(distance):
@@ -169,17 +167,10 @@ class GTFSGraphGenerator:
                         (all_trips_on_a_route.dest_stop_id == dsid) &
                         (all_trips_on_a_route.orig_stop_id == osid)].shape[0]
 
-                    # Make sure there's at least one trip such that the cost isn't 0
-                    if trip_count == 0:
-                        logger.warning(f"Found connection between {osid} and {dsid} to have 0 trips.\n"
-                                       f"Adding one to make sure that cost isn't 0")
-                        trip_count = 1
-
                     entry = {
                         'type': rt,
                         'tt': np.round(data['travel_time'], decimals=2),
                         'distance': dist,
-                        'cost': trip_count * dist * self.costs[rt].value,
                         'name': data['unique_route_id'] + '_' + str(data['sequence']),
                         'color': 'BLACK',
                     }
@@ -201,8 +192,7 @@ class GTFSGraphGenerator:
                 for k, v in malformed_edge_attr.items():
                     tt = v['tt']
                     distance = tt * avg_speeds[v['type']]
-                    cost = distance * self.costs[v['type']].value
-                    edge_attrs[k].update({'distance': distance, 'cost': cost})
+                    edge_attrs[k].update({'distance': distance})
 
                 nx.set_edge_attributes(G_transit, edge_attrs)
 

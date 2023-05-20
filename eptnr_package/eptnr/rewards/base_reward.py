@@ -1,9 +1,8 @@
 import abc
 import igraph as ig
 import pandas as pd
-from typing import List, Dict
-from ..constants.travel_metric import TravelMetric
-from .utils.graph_computation_utils import get_tt_hops_com_dfs
+from typing import List
+from .utils.graph_computation_utils import get_tt_df
 import logging
 
 logging.basicConfig()
@@ -13,36 +12,20 @@ logger.setLevel(logging.INFO)
 
 class BaseReward(abc.ABC):
 
-    def __init__(self, census_data: pd.DataFrame, com_threshold: float, groups: List[str] = None,
-                 metrics: List[TravelMetric] = None, verbose: bool = False, reward_scaling=False) -> None:
+    def __init__(self, census_data: pd.DataFrame, groups: List[str] = None, 
+                 verbose: bool = False, reward_scaling=False) -> None:
 
         self.census_data = census_data
-        self.com_threshold = com_threshold
-
-        self.metrics = metrics or [TravelMetric.TT, TravelMetric.HOPS, TravelMetric.COM]
-        self.metrics_names = [t.value for t in self.metrics]
         self.verbose = verbose
         self.reward_scaling = reward_scaling
 
         self.groups = groups
 
-    def retrieve_dfs(self, g: ig.Graph) -> Dict[str, pd.DataFrame]:
+    def retrieve_tt_df(self, g: ig.Graph) -> pd.DataFrame:
         g_prime = g.subgraph_edges(g.es.select(active_eq=1), delete_vertices=False)
-        tt_samples, hops_samples, com_samples = get_tt_hops_com_dfs(g_prime, self.census_data, self.com_threshold)
+        tt_samples = get_tt_df(g_prime, self.census_data)
 
-        metrics_values = {
-            TravelMetric.TT.value: tt_samples,
-            TravelMetric.HOPS.value: hops_samples,
-            TravelMetric.COM.value: com_samples
-        }
-
-        metrics_dfs = {metrics_name: metrics_values[metrics_name] for metrics_name in self.metrics_names}
-
-        first_available_metric = list(metrics_dfs.keys())[0]
-        self.groups = list(metrics_dfs[first_available_metric].group.unique()) if not self.groups else self.groups
-        assert isinstance(self.groups, list)
-
-        return metrics_dfs
+        return tt_samples
 
     @abc.abstractmethod
     def _evaluate(self, g: ig.Graph, *args, **kwargs) -> float:

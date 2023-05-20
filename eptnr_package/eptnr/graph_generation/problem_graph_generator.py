@@ -1,21 +1,19 @@
 from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import List
+import logging
 
 import geopandas as gpd
-from typing import List
 import igraph as ig
-from enum import Enum
-
 import networkx as nx
-from pathlib import Path
+from shapely.geometry import Point
+
 from ..constants.osm_network_types import OSMNetworkTypes
-from ..constants.gtfs_network_types import GTFSNetworkTypes
-from ..constants.gtfs_network_costs_per_distance_unit import GTFSNetworkCostsPerDistanceUnit
 from .gtfs_graph_generator import GTFSGraphGenerator
 from .osm_graph_generation import OSMGraphGenerator
 from ..constants.travel_speed import MetricTravelSpeed
 from .utils.graph_expansion import add_points_to_graph, add_edges_to_graph
-import logging
-from datetime import datetime
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -27,10 +25,12 @@ class ProblemGraphGenerator:
     # TODO change modalities into ENUM
     # TODO change distances_computation_mode into ENUM
     def __init__(self, city: str, gtfs_zip_file_path: Path, out_dir_path: Path,
-                 day: str, time_from: str, time_to: str, agencies: List[str],
-                 poi_gdf: gpd.GeoDataFrame, census_gdf: gpd.GeoDataFrame, modalities: List[str] = None,
+                 day: str, time_from: str, time_to: str,
+                 poi_gdf: gpd.GeoDataFrame, res_centroids_gdf: gpd.GeoDataFrame, 
+                 agencies: List[str] = None, modalities: List[str] = None,
                  distances_computation_mode: str = 'osmnx',
-                 costs: Enum = GTFSNetworkCostsPerDistanceUnit) -> None:
+                 clip_graph_to_neighborhoods: bool = False, 
+                 geographical_neighborhoods_gdf: gpd.GeoDataFrame = None) -> None:
         """
 
         Args:
@@ -41,22 +41,23 @@ class ProblemGraphGenerator:
             time_from:
             time_to:
             poi_gdf:
-            census_gdf:
+            res_centroids_gdf:
             modalities: A list of modalities (e.g. ['tram', 'metro', 'bus']) to filter for. If None all modalities
                         are regarded.
-            costs: The cost per distance unit (e.g. per meter) for each GTFS type (or the modality selected)
         """
         self.city = city
         self.gtfs_graph_generator = GTFSGraphGenerator(city=city, gtfs_zip_file_path=gtfs_zip_file_path,
                                                        out_dir_path=out_dir_path, day=day,
                                                        time_from=time_from, time_to=time_to, agencies=agencies,
-                                                       contract_vertices=True, modalities=modalities, costs=costs)
+                                                       contract_vertices=True, modalities=modalities)
         self.osm_graph_generator = OSMGraphGenerator(city=city, network_type=OSMNetworkTypes.WALK,
                                                      graph_out_path=out_dir_path)
         self.out_dir_path = out_dir_path
         self.poi_gdf = poi_gdf
-        self.census_gdf = census_gdf
+        self.res_centroids_gdf = res_centroids_gdf
         self.distances_computation_mode = distances_computation_mode
+        self.clip_graph_to_neighborhoods = clip_graph_to_neighborhoods
+        self.geographical_neighborhoods_gdf = geographical_neighborhoods_gdf
 
     def generate_problem_graph(self) -> Path:
         """
@@ -91,9 +92,9 @@ class ProblemGraphGenerator:
 
         # Add all residential centroids as vertices
         logger.debug("Adding residential centroid vertices to graph")
-        rc_names = self.census_gdf.name.to_list()
-        rc_xs = self.census_gdf.geometry.x.to_numpy()
-        rc_ys = self.census_gdf.geometry.y.to_numpy()
+        rc_names = self.res_centroids_gdf.name.to_list()
+        rc_xs = self.res_centroids_gdf.geometry.x.to_numpy()
+        rc_ys = self.res_centroids_gdf.geometry.y.to_numpy()
 
         if not len(set(rc_names)) == len(rc_names):
             raise ValueError("Names of residential centroids in the GeoDataFrames have to be unique")
@@ -142,12 +143,29 @@ class ProblemGraphGenerator:
 
         for es_attr in g.es.attributes():
             if es_attr not in ['name', 'routetype', 'uniqueagencyid', 'uniquerouteid',
-                               'tt', 'weight', 'cost', 'color', 'type', 'active']:
+                               'tt', 'weight', 'color', 'type', 'active']:
                 del g.es[es_attr]
 
         final_out_file = self.out_dir_path.joinpath(f"{self.city}_problem_graph_{datetime.now().date()}.gml")
         logger.debug(f"Writing final problem graph to {final_out_file}.\n"
                      f"This operation took {datetime.now()-start_time}")
+        
+        # Clip graph to neighborhoods
+        if self.clip_graph_to_neighborhoods:
+            if self.geographical_neighborhoods_gdf is None:
+                raise ValueError("If clip_graph_to_neighborhoods is True, you have to provide a geographical_neighborhoods_gdf")
+            
+            logger.debug("Clipping graph to neighborhoods")
+            logger.warning("This operation does not work properly yet! Check your graph!")
+            # Filter all vertices which actually lie in the neighborhoods
+            station_locations = [(pts_id, Point(x,y)) for pts_id, x,y in zip(range(len(g.vs)), g.vs['x'], g.vs['y'])]
+            station_gdf = gpd.GeoDataFrame(station_locations, columns=['id', 'geometry'], geometry='geometry', crs=self.geographical_neighborhoods_gdf.crs)
+            overlapping_stations = station_gdf[station_gdf.intersects(self.geographical_neighborhoods_gdf.unary_union)]
+            overlapping_vertices = g.vs[overlapping_stations['id']]
+
+            # Create a subgraph with the filtered vertices
+            g = g.subgraph(overlapping_vertices)
+        
         ig.write(g, final_out_file)
 
         return final_out_file

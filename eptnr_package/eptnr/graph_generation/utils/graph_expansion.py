@@ -95,7 +95,6 @@ def add_edges_to_graph(g: ig.Graph, osm_graph: nx.MultiDiGraph,
         'distance': np.round(distances, decimals=2),
         'type': e_type,
         'tt': np.round((distances / (speed * 1000)) * 60, decimals=2),
-        'cost': 0,
         'color': color,
     }
 
