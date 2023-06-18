@@ -81,5 +81,5 @@ with st.container():
 
         display_per_group_tt_metrics(g, census_data, g_reduced)
 
-        new_equality_graph = display_graph(g_reduced, census_data, edges_to_remove)
+        new_equality_graph = display_graph(g, census_data, edges_to_remove)
         save_plot(new_equality_graph, 'new_equality_graph')
