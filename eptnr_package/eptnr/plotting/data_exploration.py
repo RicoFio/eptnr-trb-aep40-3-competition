@@ -23,7 +23,7 @@ def plot_travel_time_histogram(graph: igraph.Graph, census: pd.DataFrame, fig=No
                                min_x=None, max_x=None, min_y=None, max_y=None):
 
     melted_temp_tt = get_melted_tt_df(graph, census)
-    group_set = set(melted_temp_tt['group'])
+    group_set = melted_temp_tt['group'].unique()
 
     if not ax:
         fig, ax = plt.subplots()
@@ -38,6 +38,7 @@ def plot_travel_time_histogram(graph: igraph.Graph, census: pd.DataFrame, fig=No
         palette='Set1',
         ax=ax
     )
+    ax.set_xlabel('Travel Time')
 
     for group, color in zip(group_set, sns.color_palette('Set1')[:len(group_set)]):
         ax.vlines(

@@ -7,32 +7,47 @@ import geopandas as gpd
 from shapely import wkt
 from typing import List
 from matplotlib import pyplot as plt
-from eptnr.plotting.data_exploration import get_melted_tt_df
+from eptnr.plotting.data_exploration import plot_travel_time_histogram, get_melted_tt_df
 import matplotlib
+import streamlit as st
+from eptnr.rewards import EgalitarianTheilReward
+import math
 
 
+@st.cache_data
 def load_filenames(folder_path='.'):
     return os.listdir(folder_path)
 
 
+@st.cache_resource
 def load_graph(gml_file_path: Path):
     """Load GML file and return igraph object"""
     graph: ig.Graph = ig.read(gml_file_path)
     return graph
 
 
+@st.cache_data
 def load_census_data(census_file):
     """Load parquet census file and return pandas DataFrame"""
     census_data = gpd.read_parquet(census_file)
     return census_data
 
 
+# @st.cache_data
+def compute_equality(graph: ig.Graph, census_data: gpd.GeoDataFrame):
+    reward = EgalitarianTheilReward(census_data)
+    equality = -reward.evaluate(graph)
+    return equality
+
+
+@st.cache_data
 def get_edge_types(g):
     """Return a list of unique edge types in the graph"""
     df = g.get_edge_dataframe()
     return df['type'].unique().tolist()
 
 
+@st.cache_data
 def get_available_vertex_names(g, edge_types: List[str] = None, origin_vertex: ig.Vertex = None,
                                target_vertex: ig.Vertex = None):
     """Returns a list of vertices"""
@@ -48,6 +63,7 @@ def get_available_vertex_names(g, edge_types: List[str] = None, origin_vertex: i
     return set([e.source for e in edges] + [e.target for e in edges])
 
 
+@st.cache_data
 def remove_edges(g, edge_list):
     """Remove selected edges from the graph and return updated graph"""
     g_copy = g.copy()
@@ -55,14 +71,24 @@ def remove_edges(g, edge_list):
     return g_copy
 
 
-def get_tt_stats(g: ig.Graph, census_df: pd.DataFrame, round: int = -1):
-    melted_tt_df = get_melted_tt_df(g, census_df)
+# @st.cache_data
+def get_tt_stats(g: ig.Graph, census_data: gpd.GeoDataFrame, round_to_digit: int = -1):
+    melted_tt_df = get_melted_tt_df(g, census_data)
     out = melted_tt_df.groupby('group')['travel time'].agg(['mean', 'median', 'var']).reset_index()
-    if round > 0:
-        out = out.round(round)
+    if round_to_digit > 0:
+        out = out.round(round_to_digit)
     return out
 
 
+# @st.cache_data
+def get_equality_hist_plot(graph: ig.Graph, census_data: gpd.GeoDataFrame):
+    fig, ax = plt.subplots(figsize=(10, 10))
+    base_hist = plot_travel_time_histogram(graph, census_data, fig, ax)
+    equality_hist = base_hist[0]
+    return equality_hist
+
+
+# @st.cache_data
 def plot_map(graph: ig.Graph, census_data: gpd.GeoDataFrame, removed_edges: List[int] = []):
     fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
@@ -90,3 +116,13 @@ def plot_map(graph: ig.Graph, census_data: gpd.GeoDataFrame, removed_edges: List
 
     return fig
 
+
+@st.cache_resource
+def get_reduced_graph(graph: ig.Graph, edges_to_remove: List[int]):
+    g_reduced = graph.copy()
+    g_reduced.delete_edges(edges_to_remove)
+    return g_reduced
+
+
+def save_plot(fig: plt.Figure, filename: str):
+    fig.savefig(f'plots/{filename}.png', dpi=300, bbox_inches='tight')
