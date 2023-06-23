@@ -66,10 +66,10 @@ def display_equality_metric(graph: ig.Graph, census_data: gpd.GeoDataFrame, redu
     st.write("### Equality")
     equality = compute_equality(graph, census_data)
     total_inhabitants = census_data['n_inh'].sum()
-    st.write(f"The Theil T index indicates the prevalent inequality of access to the socio-economic POIs.")
-    st.write(f"The closer the index is to 0, the more equal access is distributed. "
-             f"The closer it is to {round(math.log(total_inhabitants), 4)} (maximum), "
-             f"the more unequal the distribution of access.")
+    # st.write(f"The Theil T index indicates the prevalent inequality of access to the socio-economic POIs.")
+    # st.write(f"The closer the index is to 0, the more equal access is distributed. "
+    #          f"The closer it is to {round(math.log(total_inhabitants), 4)} (maximum), "
+    #          f"the more unequal the distribution of access.")
     if reduced_graph:
         equality_new = compute_equality(reduced_graph, census_data)
         st.metric(label="Theil T Inequality", value=round(equality_new, 4), delta=round(equality_new - equality, 4),
